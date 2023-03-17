@@ -2,6 +2,16 @@ import csv
 from typing import Optional
 
 
+def read_file(filename: str, x_name: str, y_name: str):
+    x = []
+    y = []
+    with open('data.csv') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            x.append(float(row[x_name]))
+            y.append(float(row[y_name]))
+    return x, y
+
 def predict(c: list[float], x: list[float]) -> float:
     """
     Return the predicted value, y based on linear regression model.
@@ -62,15 +72,8 @@ def train(x: list[float], y: list[float], alpha: Optional[list[float]] = None,
 
 
 if __name__ == "__main__":
-    km = []
-    price = []
-
     print("Reading data...")
-    with open('data.csv') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            km.append(float(row['km']))
-            price.append(float(row['price']))
+    km, price = read_file("data.csv", "km", "price")
 
     # calculate the normalisation parameters
     min_x = min(km)
