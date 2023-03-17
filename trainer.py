@@ -4,7 +4,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 
 
-def read_file(filename: str, x_name: str, y_name: str):
+def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
     x = []
     y = []
     with open('data.csv') as f:
@@ -46,21 +46,18 @@ def train(x: list[float], y: list[float], alpha: Optional[list[float]] = None,
         alpha = [0, 0]
     
     ratio = 1   # assume a large initial learning ratio
-    pred = [predict(alpha, [i]) for i, j in zip(x, y)]
-    mse = sum((i - j)**2 for i, j in zip(y, pred))
+    mse = mean_squared_error(alpha, x, y)
 
     while mse != 0:
         grad = gradient(alpha, x, y)
         alpha_n = [i - ratio * j for i, j in zip(alpha, grad)]
-        pred = [predict(alpha_n, [i]) for i, j in zip(x, y)]
-        mse_n = sum((i - j)**2 for i, j in zip(y, pred))
+        mse_n = mean_squared_error(alpha_n, x, y)
         
         # reduce learning ratio if mean square error increases (divergence)
         while mse_n > mse:
             ratio /= 2
             alpha_n = [i - ratio * j for i, j in zip(alpha, grad)]
-            pred = [predict(alpha_n, [i]) for i, j in zip(x, y)]
-            mse_n = sum((i - j)**2 for i, j in zip(y, pred))
+            mse_n = mean_squared_error(alpha_n, x, y)
         
         # stop loop if precision is achieved
         if (mse - mse_n) / mse < precision:
@@ -72,6 +69,24 @@ def train(x: list[float], y: list[float], alpha: Optional[list[float]] = None,
         
     return alpha
 
+def mean(nums: list[float]) -> float:
+    """Return the mean of a list of float."""
+    return sum(nums) / len(nums)
+
+def residual_ss(c: list[float], x: list[float], y: list[float]) -> float:
+    """Return the residual sum of squares."""
+    pred = [predict(c, [i]) for i, j in zip(x, y)]
+    return sum((i - j)**2 for i, j in zip(y, pred))
+
+def mean_squared_error(c: list[float], x: list[float], y: list[float]) -> float:
+    """Return the mean squared error."""
+    return residual_ss(c, x, y) / len(y)
+
+def residual_total(c: list[float], x: list[float], y: list[float]) -> float:
+    """Return the total sum of squares."""
+    y_mean = mean(y)
+    pred = [predict(c, [i]) for i, j in zip(x, y)]
+    return sum((i - y_mean)**2 for i in y)
 
 if __name__ == "__main__":
     print("Reading data...")
@@ -102,6 +117,10 @@ if __name__ == "__main__":
         writer.writeheader()
         writer.writerow({i: j for i, j in zip(fieldnames, coeff)})
     
+    for i, val in enumerate(coeff):
+        print(f"theta{i} = {coeff[i]}")
+    R2 = 1 - residual_ss(coeff, km, price) / residual_total(coeff, km, price)
+    print(f"R_squared = {R2}")
     print(f"Coefficients written to {outfile}.")
 
     # plot graph
