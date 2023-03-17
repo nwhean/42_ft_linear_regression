@@ -1,6 +1,8 @@
 import csv
 from typing import Optional
 
+import matplotlib.pyplot as plt
+
 
 def read_file(filename: str, x_name: str, y_name: str):
     x = []
