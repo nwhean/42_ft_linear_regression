@@ -65,6 +65,7 @@ if __name__ == "__main__":
     km = []
     price = []
 
+    print("Reading data...")
     with open('data.csv') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -83,12 +84,17 @@ if __name__ == "__main__":
     km = [(i - min_x) / range_x for i in km]
     price = [(i - min_y) / range_y for i in price]
 
+    print("Descending gradient...")
     alpha = train(km, price)
     coeff = []
     coeff.append(min_y + range_y * (alpha[0] - alpha[1] * min_x / range_x))
     coeff.append(alpha[1] * range_y / range_x)
 
-    print(min_x, max_x, range_x)
-    print(min_y, max_y, range_y)
-    print(alpha)
-    print(coeff)
+    outfile = 'coefficient.csv'
+    with open(outfile, 'w', newline='') as f:
+        fieldnames = ["theta" + str(i) for i in range(2)]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow({i: j for i, j in zip(fieldnames, coeff)})
+    
+    print(f"Coefficients written to {outfile}.")
