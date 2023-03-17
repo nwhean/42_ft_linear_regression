@@ -86,11 +86,11 @@ if __name__ == "__main__":
     max_y = max(price)
     range_y = max_y - min_y
 
-    km = [(i - min_x) / range_x for i in km]
-    price = [(i - min_y) / range_y for i in price]
+    x = [(i - min_x) / range_x for i in km]
+    y = [(i - min_y) / range_y for i in price]
 
     print("Descending gradient...")
-    alpha = train(km, price)
+    alpha = train(x, y)
     coeff = []
     coeff.append(min_y + range_y * (alpha[0] - alpha[1] * min_x / range_x))
     coeff.append(alpha[1] * range_y / range_x)
@@ -103,3 +103,24 @@ if __name__ == "__main__":
         writer.writerow({i: j for i, j in zip(fieldnames, coeff)})
     
     print(f"Coefficients written to {outfile}.")
+
+    # plot graph
+    plt.scatter(km, price)  # plot data as scatter plot
+    x0 = [min(km), max(km)]
+    y0 = [predict(coeff, [i]) for i in x0]
+    plt.plot(x0, y0)    # plot regression line
+    
+    # add title and labels
+    plt.title("Regression Line")
+    plt.xlabel("Mileage")
+    plt.ylabel("Price")
+    
+    # add thousand separators to x and y axes
+    current_values = plt.gca().get_xticks()
+    plt.gca().xaxis.set_ticks(current_values)
+    plt.gca().set_xticklabels(['{:,.0f}'.format(x) for x in current_values])
+    current_values = plt.gca().get_yticks()
+    plt.gca().yaxis.set_ticks(current_values)
+    plt.gca().set_yticklabels(['{:,.0f}'.format(x) for x in current_values])
+    
+    plt.show()
