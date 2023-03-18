@@ -14,15 +14,15 @@ def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
             y.append(float(row[y_name]))
     return x, y
 
-def predict(c: list[float], x: float) -> float:
+def predict(theta: list[float], x: float) -> float:
     """
     Return the predicted value, y based on linear regression model.
     Where
-    y = c0 + c1 x
+    y = theta0 + theta1 x
     """
-    return c[0] + c[1] * x
+    return theta[0] + theta[1] * x
 
-def gradient(c: list[float], x: list[float], y: list[float]) -> list[float]:
+def gradient(theta: list[float], x: list[float], y: list[float]) -> list[float]:
     """
     Return the gradient of linear regression model at the given coefficient c
     """
@@ -31,61 +31,62 @@ def gradient(c: list[float], x: list[float], y: list[float]) -> list[float]:
             "Lengths of x (independent) and y (dependent) must be equal")
     n = len(y)
     grad = []
-    pred = [predict(c, i) for i, j in zip(x, y)]
+    pred = [predict(theta, i) for i, j in zip(x, y)]
     grad.append(sum(i - j for i, j in zip(y, pred)))
     grad.append(sum((i - j) * k for i, j, k in zip(y, pred, x)))
     return [-2.0 / n * i for i in grad]
 
-def train(x: list[float], y: list[float], alpha: Optional[list[float]] = None,
+def train(x: list[float], y: list[float], theta: Optional[list[float]] = None,
           precision=10**-12) -> list[float]:
     """
-    Given the initial coefficients 'alpha', return the final coefficient based
+    Given the initial coefficients 'theta', return the final coefficient based
     on gradient descent method.
     """
-    if alpha is None:
-        alpha = [0, 0]
+    if theta is None:
+        theta = [0, 0]
     
     ratio = 1   # assume a large initial learning ratio
-    mse = mean_squared_error(alpha, x, y)
+    mse = mean_squared_error(theta, x, y)
 
     while mse != 0:
-        grad = gradient(alpha, x, y)
-        alpha_n = [i - ratio * j for i, j in zip(alpha, grad)]
-        mse_n = mean_squared_error(alpha_n, x, y)
+        grad = gradient(theta, x, y)
+        theta_n = [i - ratio * j for i, j in zip(theta, grad)]
+        mse_n = mean_squared_error(theta_n, x, y)
         
         # reduce learning ratio if mean square error increases (divergence)
         while mse_n > mse:
             ratio /= 2
-            alpha_n = [i - ratio * j for i, j in zip(alpha, grad)]
-            mse_n = mean_squared_error(alpha_n, x, y)
+            theta_n = [i - ratio * j for i, j in zip(theta, grad)]
+            mse_n = mean_squared_error(theta_n, x, y)
         
         # stop loop if precision is achieved
         if (mse - mse_n) / mse < precision:
             break
         
         # prepare for the next loop
-        alpha = alpha_n
+        theta = theta_n
         mse = mse_n
         
-    return alpha
+    return theta
 
 def mean(nums: list[float]) -> float:
     """Return the mean of a list of float."""
     return sum(nums) / len(nums)
 
-def residual_ss(c: list[float], x: list[float], y: list[float]) -> float:
+def residual_ss(theta: list[float], x: list[float], y: list[float]) -> float:
     """Return the residual sum of squares."""
-    pred = [predict(c, i) for i, j in zip(x, y)]
+    pred = [predict(theta, i) for i, j in zip(x, y)]
     return sum((i - j)**2 for i, j in zip(y, pred))
 
-def mean_squared_error(c: list[float], x: list[float], y: list[float]) -> float:
+def mean_squared_error(theta: list[float], x: list[float], y: list[float]
+        ) -> float:
     """Return the mean squared error."""
-    return residual_ss(c, x, y) / len(y)
+    return residual_ss(theta, x, y) / len(y)
 
-def residual_total(c: list[float], x: list[float], y: list[float]) -> float:
+def residual_total(theta: list[float], x: list[float], y: list[float]) -> float:
     """Return the total sum of squares."""
     y_mean = mean(y)
-    pred = [predict(c, i) for i, j in zip(x, y)]
+    pred = [predict(theta, i) for i, j in zip(x, y)]
     return sum((i - y_mean)**2 for i in y)
 
 if __name__ == "__main__":
@@ -105,10 +106,10 @@ if __name__ == "__main__":
     y = [(i - min_y) / range_y for i in price]
 
     print("Descending gradient...")
-    alpha = train(x, y)
+    theta = train(x, y)
     coeff = []
-    coeff.append(min_y + range_y * (alpha[0] - alpha[1] * min_x / range_x))
-    coeff.append(alpha[1] * range_y / range_x)
+    coeff.append(min_y + range_y * (theta[0] - theta[1] * min_x / range_x))
+    coeff.append(theta[1] * range_y / range_x)
 
     outfile = 'coefficient.csv'
     with open(outfile, 'w', newline='') as f:

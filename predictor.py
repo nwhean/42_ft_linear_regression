@@ -4,7 +4,7 @@ from trainer import predict
 
 
 if __name__ == "__main__":
-    alpha = [0.0, 0.0]
+    theta = [0.0, 0.0]
     
     infile = "coefficient.csv"
     try:
@@ -15,10 +15,10 @@ if __name__ == "__main__":
         # read only 1 row from the file
         reader = csv.DictReader(f)
         row = next(reader)
-        alpha = [float(row["theta" + str(i)]) for i in range(len(row))]
+        theta = [float(row["theta" + str(i)]) for i in range(len(row))]
         f.close()
     
     # prompt user 
     mileage = float(input("Please enter mileage: "))
-    price = predict(alpha, mileage)
+    price = predict(theta, mileage)
     print(f"The predicted price is {price:.0f}.")
