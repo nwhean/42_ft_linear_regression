@@ -1,8 +1,6 @@
 import csv
 from typing import Optional
 
-import matplotlib.pyplot as plt
-
 
 def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
     x = []
@@ -89,7 +87,10 @@ def residual_total(theta: list[float], x: list[float], y: list[float]) -> float:
     pred = [predict(theta, i) for i, j in zip(x, y)]
     return sum((i - y_mean)**2 for i in y)
 
+
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    
     print("Reading data...")
     km, price = read_file("data.csv", "km", "price")
 
