@@ -1,5 +1,12 @@
-# virtual environment
+# vscode
+.vscode
+
+# virtual environment and ccache
 venv
+__pycache__
 
 # csv
 *.csv
+
+# other files
+*.ods
