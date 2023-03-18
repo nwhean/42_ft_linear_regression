@@ -12,6 +12,22 @@ def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
             y.append(float(row[y_name]))
     return x, y
 
+def normalise(x: list[float], y: list[float]) -> tuple[list[float]]:
+    """Normalise the input data to improve rate of convergence."""
+    # calculate the normalisation parameters
+    min_x = min(x)
+    max_x = max(x)
+    range_x = max_x - min_x
+
+    min_y = min(y)
+    max_y = max(y)
+    range_y = max_y - min_y
+
+    x_norm = [(i - min_x) / range_x for i in x]
+    y_norm = [(i - min_y) / range_y for i in y]
+    
+    return x_norm, y_norm, min_x, range_x, min_y, range_y
+
 def predict(theta: list[float], x: float) -> float:
     """
     Return the predicted value, y based on linear regression model.
@@ -93,18 +109,7 @@ if __name__ == "__main__":
     
     print("Reading data...")
     km, price = read_file("data.csv", "km", "price")
-
-    # calculate the normalisation parameters
-    min_x = min(km)
-    max_x = max(km)
-    range_x = max_x - min_x
-
-    min_y = min(price)
-    max_y = max(price)
-    range_y = max_y - min_y
-
-    x = [(i - min_x) / range_x for i in km]
-    y = [(i - min_y) / range_y for i in price]
+    x, y, min_x, range_x, min_y, range_y = normalise(km, price)
 
     print("Descending gradient...")
     theta = train(x, y)
