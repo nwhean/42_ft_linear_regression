@@ -28,6 +28,14 @@ def normalise(x: list[float], y: list[float]) -> tuple[list[float]]:
     
     return x_norm, y_norm, min_x, range_x, min_y, range_y
 
+def denormalise(theta: list[float], min_x: float, range_x: float,
+                min_y: float, range_y: float) -> list[float]:
+    """Denormalise coefficients based on given normalisation parameters."""
+    coeff = []
+    coeff.append(min_y + range_y * (theta[0] - theta[1] * min_x / range_x))
+    coeff.append(theta[1] * range_y / range_x)
+    return coeff
+
 def predict(theta: list[float], x: float) -> float:
     """
     Return the predicted value, y based on linear regression model.
@@ -113,9 +121,7 @@ if __name__ == "__main__":
 
     print("Descending gradient...")
     theta = train(x, y)
-    coeff = []
-    coeff.append(min_y + range_y * (theta[0] - theta[1] * min_x / range_x))
-    coeff.append(theta[1] * range_y / range_x)
+    coeff = denormalise(theta, min_x, range_x, min_y, range_y)
 
     outfile = 'coefficient.csv'
     with open(outfile, 'w', newline='') as f:
