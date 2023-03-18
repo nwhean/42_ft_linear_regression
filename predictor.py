@@ -20,5 +20,5 @@ if __name__ == "__main__":
     
     # prompt user 
     mileage = float(input("Please enter mileage: "))
-    price = predict(alpha, [mileage])
+    price = predict(alpha, mileage)
     print(f"The predicted price is {price:.0f}.")

@@ -14,13 +14,13 @@ def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
             y.append(float(row[y_name]))
     return x, y
 
-def predict(c: list[float], x: list[float]) -> float:
+def predict(c: list[float], x: float) -> float:
     """
     Return the predicted value, y based on linear regression model.
     Where
     y = c0 + c1 x
     """
-    return c[0] + sum(i*j for i, j in zip(c[1:], x))
+    return c[0] + c[1] * x
 
 def gradient(c: list[float], x: list[float], y: list[float]) -> list[float]:
     """
@@ -31,7 +31,7 @@ def gradient(c: list[float], x: list[float], y: list[float]) -> list[float]:
             "Lengths of x (independent) and y (dependent) must be equal")
     n = len(y)
     grad = []
-    pred = [predict(c, [i]) for i, j in zip(x, y)]
+    pred = [predict(c, i) for i, j in zip(x, y)]
     grad.append(sum(i - j for i, j in zip(y, pred)))
     grad.append(sum((i - j) * k for i, j, k in zip(y, pred, x)))
     return [-2.0 / n * i for i in grad]
@@ -75,7 +75,7 @@ def mean(nums: list[float]) -> float:
 
 def residual_ss(c: list[float], x: list[float], y: list[float]) -> float:
     """Return the residual sum of squares."""
-    pred = [predict(c, [i]) for i, j in zip(x, y)]
+    pred = [predict(c, i) for i, j in zip(x, y)]
     return sum((i - j)**2 for i, j in zip(y, pred))
 
 def mean_squared_error(c: list[float], x: list[float], y: list[float]) -> float:
@@ -85,7 +85,7 @@ def mean_squared_error(c: list[float], x: list[float], y: list[float]) -> float:
 def residual_total(c: list[float], x: list[float], y: list[float]) -> float:
     """Return the total sum of squares."""
     y_mean = mean(y)
-    pred = [predict(c, [i]) for i, j in zip(x, y)]
+    pred = [predict(c, i) for i, j in zip(x, y)]
     return sum((i - y_mean)**2 for i in y)
 
 if __name__ == "__main__":
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     # plot graph
     plt.scatter(km, price)  # plot data as scatter plot
     x0 = [min(km), max(km)]
-    y0 = [predict(coeff, [i]) for i in x0]
+    y0 = [predict(coeff, i) for i in x0]
     plt.plot(x0, y0)    # plot regression line
     
     # add title and labels
