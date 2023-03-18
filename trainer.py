@@ -3,6 +3,7 @@ from typing import Optional
 
 
 def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
+    """Read data from file."""
     x = []
     y = []
     with open('data.csv') as f:
@@ -11,6 +12,14 @@ def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
             x.append(float(row[x_name]))
             y.append(float(row[y_name]))
     return x, y
+
+def write_file(filename: str, theta: list[float]) -> None:
+    """Write the regression parameters to a file."""
+    with open(filename, 'w', newline='') as f:
+        fieldnames = ["theta" + str(i) for i in range(2)]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow({i: j for i, j in zip(fieldnames, theta)})
 
 def normalise(x: list[float], y: list[float]) -> tuple[list[float]]:
     """Normalise the input data to improve rate of convergence."""
@@ -124,17 +133,14 @@ if __name__ == "__main__":
     coeff = denormalise(theta, min_x, range_x, min_y, range_y)
 
     outfile = 'coefficient.csv'
-    with open(outfile, 'w', newline='') as f:
-        fieldnames = ["theta" + str(i) for i in range(2)]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerow({i: j for i, j in zip(fieldnames, coeff)})
+    write_file(outfile, coeff)
+    print(f"Coefficients written to {outfile}.")
     
+    # Calculate precision of regression
     for i, val in enumerate(coeff):
         print(f"theta{i} = {coeff[i]}")
     R2 = 1 - residual_ss(coeff, km, price) / residual_total(coeff, km, price)
     print(f"R_squared = {R2}")
-    print(f"Coefficients written to {outfile}.")
 
     # plot graph
     plt.scatter(km, price)  # plot data as scatter plot
