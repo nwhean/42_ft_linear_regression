@@ -3,6 +3,47 @@
 import csv
 from typing import Optional
 
+import numpy as np
+
+from regression import Regression
+
+
+class LinearRegression(Regression):
+    """Ordinary least squares Linear Regression."""
+    def predict(self, var_x: np.ndarray, theta: Optional[np.ndarray] = None
+            ) -> float:
+        """
+        Return the predicted value, y based on linear regression model.
+        Where
+        y = theta0 + theta1 * var_x1 + theta2 * var_x2 + ... + thetan * var_xn
+        """
+        if theta is None:
+            theta = self.theta
+        return theta[0] + np.sum(theta[1:] * var_x)
+
+    def _residual_ss(self, theta: np.ndarray) -> float:
+        """Return the residual sum of squares."""
+        pred = np.array([self.predict(i, theta) for i in self.var_x])
+        return np.sum((self.var_y - pred)**2)
+
+    def _cost(self, theta: np.ndarray) -> float:
+        """Return the mean squared error."""
+        return self._residual_ss(theta) / self.var_y.size
+
+    def _gradient(self, theta: np.ndarray) -> np.ndarray:
+        """
+        Return the gradient of linear regression model at the given coefficient c
+        """
+        super()._gradient(theta)
+        count = len(self.var_y)
+        pred = np.array([self.predict(i, theta) for i in self.var_x])
+        residual = self.var_y - pred
+        grad = [np.sum(residual)]
+        for j in range(self.var_x.shape[1]):
+            grad.append(np.sum(residual * self.var_x[:, j]))
+        grad = np.array(grad)
+        return grad * -2 / count
+
 
 def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
     """Read data from file."""
@@ -13,7 +54,7 @@ def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
         for row in reader:
             var_x.append(float(row[x_name]))
             var_y.append(float(row[y_name]))
-    return var_x, var_y
+    return np.array(var_x), np.array(var_y)
 
 def write_file(filename: str, theta: list[float]) -> None:
     """Write the regression parameters to a file."""
@@ -23,106 +64,38 @@ def write_file(filename: str, theta: list[float]) -> None:
         writer.writeheader()
         writer.writerow(dict(zip(fieldnames, theta)))
 
-def normalise(var_x: list[float], var_y: list[float]) -> tuple[list[float]]:
-    """Normalise the input data to improve rate of convergence."""
+def normalise_array(data: np.ndarray) -> tuple[np.ndarray, float, float]:
+    """Normalise the input array to improve rate of convergence."""
     # calculate the normalisation parameters
-    min_x = min(var_x)
-    max_x = max(var_x)
-    range_x = max_x - min_x
+    shift = data.min()
+    scale = data.max() - shift
+    return (data - shift) / scale, shift, scale
 
-    min_y = min(var_y)
-    max_y = max(var_y)
-    range_y = max_y - min_y
+def normalise_matrix(data: np.matrix
+        ) -> tuple[np.matrix, np.ndarray, np.ndarray]:
+    """Normalise the input matrix to improve rate of convergence."""
+    shift = data.min(axis=0)
+    scale = data.max(axis=0) - shift
+    data = (data.T - shift) / scale
+    return data.T, shift, scale
 
-    x_norm = [(i - min_x) / range_x for i in var_x]
-    y_norm = [(i - min_y) / range_y for i in var_y]
-
-    return x_norm, y_norm, [min_x, range_x, min_y, range_y]
-
-def denormalise(theta: list[float], norm_param: list[float]) -> list[float]:
+def denormalise(theta: list[float], shift_x: np.ndarray, scale_x: np.ndarray,
+                shift_y: float, scale_y: float) -> list[float]:
     """Denormalise coefficients based on given normalisation parameters."""
-    min_x, range_x, min_y, range_y = norm_param
-    retval = []
-    retval.append(min_y + range_y * (theta[0] - theta[1] * min_x / range_x))
-    retval.append(theta[1] * range_y / range_x)
-    return retval
+    retval = np.array([shift_y
+              + scale_y * (theta[0] - np.sum((theta[1:] * shift_x) / scale_x))
+              ])
+    retval = np.append(retval, theta[1:] * scale_y / scale_x)
+    return np.array(retval)
 
-def predict(theta: list[float], var_x: float) -> float:
-    """
-    Return the predicted value, y based on linear regression model.
-    Where
-    y = theta0 + theta1 * var_x
-    """
-    return theta[0] + theta[1] * var_x
-
-def gradient(theta: list[float], var_x: list[float], var_y: list[float]
-        ) -> list[float]:
-    """
-    Return the gradient of linear regression model at the given coefficient c
-    """
-    if len(var_x) != len(var_y):
-        raise IndexError(
-            "Lengths of x (independent) and y (dependent) must be equal")
-    count = len(var_y)
-    grad = []
-    pred = [predict(theta, i) for i, j in zip(var_x, var_y)]
-    grad.append(sum(i - j for i, j in zip(var_y, pred)))
-    grad.append(sum((i - j) * k for i, j, k in zip(var_y, pred, var_x)))
-    return [-2.0 / count * i for i in grad]
-
-def train(var_x: list[float], var_y: list[float],
-          theta: Optional[list[float]] = None,
-          precision=10**-12) -> list[float]:
-    """
-    Given the initial coefficients 'theta', return the final coefficient based
-    on gradient descent method.
-    """
-    if theta is None:
-        theta = [0, 0]
-
-    ratio = 1   # assume a large initial learning ratio
-    mse = mean_squared_error(theta, var_x, var_y)
-
-    while mse != 0:
-        grad = gradient(theta, var_x, var_y)
-        theta_n = [i - ratio * j for i, j in zip(theta, grad)]
-        mse_n = mean_squared_error(theta_n, var_x, var_y)
-
-        # reduce learning ratio if mean square error increases (divergence)
-        while mse_n > mse:
-            ratio /= 2
-            theta_n = [i - ratio * j for i, j in zip(theta, grad)]
-            mse_n = mean_squared_error(theta_n, var_x, var_y)
-
-        # stop loop if precision is achieved
-        if (mse - mse_n) / mse < precision:
-            break
-
-        # prepare for the next loop
-        theta = theta_n
-        mse = mse_n
-
-    return theta
-
-def mean(nums: list[float]) -> float:
+def mean(nums: np.ndarray) -> float:
     """Return the mean of a list of float."""
-    return sum(nums) / len(nums)
+    return np.sum(nums) / nums.size
 
-def residual_ss(theta: list[float], var_x: list[float], var_y: list[float]
-        ) -> float:
-    """Return the residual sum of squares."""
-    pred = [predict(theta, i) for i, j in zip(var_x, var_y)]
-    return sum((i - j)**2 for i, j in zip(var_y, pred))
-
-def mean_squared_error(theta: list[float], var_x: list[float],
-                       var_y: list[float]) -> float:
-    """Return the mean squared error."""
-    return residual_ss(theta, var_x, var_y) / len(var_y)
-
-def residual_total(var_y: list[float]) -> float:
+def residual_total(var_y: np.ndarray) -> float:
     """Return the total sum of squares."""
     y_mean = mean(var_y)
-    return sum((i - y_mean)**2 for i in var_y)
+    return np.sum(var_y - y_mean)
 
 
 if __name__ == "__main__":
@@ -133,11 +106,14 @@ if __name__ == "__main__":
 
     print("Reading data...")
     km, price = read_file(INFILE, "km", "price")
-    x, y, param = normalise(km, price)
+    km = np.expand_dims(km, axis=1)
+    x, x_shift, x_scale = normalise_matrix(km)
+    y, y_shift, y_scale = normalise_array(price)
 
     print("Descending gradient...")
-    coeff_norm = train(x, y)
-    coeff = denormalise(coeff_norm, param)
+    model = LinearRegression(np.array([0, 0]))
+    model.fit(x, y)
+    coeff = denormalise(model.theta, x_shift, x_scale, y_shift, y_scale)
 
     write_file(OUTFILE, coeff)
     print(f"Coefficients written to {OUTFILE}.")
@@ -145,13 +121,15 @@ if __name__ == "__main__":
     # Calculate precision of regression
     for i, val in enumerate(coeff):
         print(f"theta{i} = {coeff[i]}")
-    r2 = 1 - residual_ss(coeff, km, price) / residual_total(price)
+    r2 = 1 - model._residual_ss(model.theta) / residual_total(price)
     print(f"R_squared = {r2}")
 
     # plot graph
     plt.scatter(km, price)  # plot data as scatter plot
+    model = LinearRegression()
+    model.theta = coeff
     x0 = [min(km), max(km)]
-    y0 = [predict(coeff, i) for i in x0]
+    y0 = [model.predict(i) for i in x0]
     plt.plot(x0, y0)    # plot regression line
 
     # add title and labels
