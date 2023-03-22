@@ -10,8 +10,8 @@ from regression import Regression
 
 class LinearRegression(Regression):
     """Ordinary least squares Linear Regression."""
-    def predict(self, var_x: np.ndarray, theta: Optional[np.ndarray] = None
-            ) -> float:
+    def predict(self, var_x: np.ndarray | np.matrix,
+                theta: Optional[np.ndarray] = None) -> float:
         """
         Return the predicted value, y based on linear regression model.
         Where
@@ -19,7 +19,13 @@ class LinearRegression(Regression):
         """
         if theta is None:
             theta = self.theta
-        return theta[0] + np.sum(theta[1:] * var_x)
+
+        if len(var_x.shape) == 1:
+            return theta[0] + np.sum(theta[1:] * var_x)
+        elif len(var_x.shape) == 2:
+            return theta[0] + np.sum((var_x.T * theta[1:]).T, axis=1)
+        else:
+            return None
 
     def score(self) -> float:
         """Return the coefficient of determination of the prediction."""
@@ -27,7 +33,7 @@ class LinearRegression(Regression):
 
     def _residual_ss(self, theta: np.ndarray) -> float:
         """Return the residual sum of squares."""
-        pred = np.array([self.predict(i, theta) for i in self.var_x])
+        pred = self.predict(self.var_x, theta)
         return np.sum((self.var_y - pred)**2)
 
     def _cost(self, theta: np.ndarray) -> float:
@@ -40,7 +46,7 @@ class LinearRegression(Regression):
         """
         super()._gradient(theta)
         count = len(self.var_y)
-        pred = np.array([self.predict(i, theta) for i in self.var_x])
+        pred = self.predict(self.var_x, theta)
         residual = self.var_y - pred
         grad = [np.sum(residual)]
         for j in range(self.var_x.shape[1]):
@@ -115,7 +121,7 @@ if __name__ == "__main__":
     y, y_shift, y_scale = normalise_array(price)
 
     print("Descending gradient...")
-    model = LinearRegression(np.array([0, 0]))
+    model = LinearRegression()
     model.fit(x, y)
     coeff = denormalise(model.theta, x_shift, x_scale, y_shift, y_scale)
 

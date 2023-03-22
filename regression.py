@@ -22,7 +22,7 @@ class Regression(ABC):
         self._theta = param
 
     @abstractmethod
-    def predict(self, var_x: np.ndarray) -> float:
+    def predict(self, var_x: np.ndarray | np.matrix) -> float:
         """Return the prediction, given list of feature"""
 
     def fit(self, var_x: np.matrix, var_y: np.ndarray,
@@ -38,7 +38,7 @@ class Regression(ABC):
 
         theta = self.theta
         if theta is None:
-            theta = np.zeros(var_x.shape[1])
+            theta = self.theta = np.zeros(var_x.shape[1] + 1)
 
         ratio = 1   # assume a large initial learning ratio
         cost = self._cost(theta)
