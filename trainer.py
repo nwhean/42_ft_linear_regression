@@ -21,6 +21,10 @@ class LinearRegression(Regression):
             theta = self.theta
         return theta[0] + np.sum(theta[1:] * var_x)
 
+    def score(self) -> float:
+        """Return the coefficient of determination of the prediction."""
+        return 1 - self._residual_ss(self.theta) / residual_total(y)
+
     def _residual_ss(self, theta: np.ndarray) -> float:
         """Return the residual sum of squares."""
         pred = np.array([self.predict(i, theta) for i in self.var_x])
@@ -95,7 +99,7 @@ def mean(nums: np.ndarray) -> float:
 def residual_total(var_y: np.ndarray) -> float:
     """Return the total sum of squares."""
     y_mean = mean(var_y)
-    return np.sum(var_y - y_mean)
+    return np.sum((var_y - y_mean)**2)
 
 
 if __name__ == "__main__":
@@ -121,13 +125,11 @@ if __name__ == "__main__":
     # Calculate precision of regression
     for i, val in enumerate(coeff):
         print(f"theta{i} = {coeff[i]}")
-    r2 = 1 - model._residual_ss(model.theta) / residual_total(price)
-    print(f"R_squared = {r2}")
+    print(f"R_squared = {model.score()}")
 
     # plot graph
     plt.scatter(km, price)  # plot data as scatter plot
-    model = LinearRegression()
-    model.theta = coeff
+    model = LinearRegression(coeff)
     x0 = [min(km), max(km)]
     y0 = [model.predict(i) for i in x0]
     plt.plot(x0, y0)    # plot regression line

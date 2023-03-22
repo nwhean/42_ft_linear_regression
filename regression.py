@@ -67,6 +67,10 @@ class Regression(ABC):
         return theta
 
     @abstractmethod
+    def score(self) -> float:
+        """Return a score representing the goodness of fit."""
+
+    @abstractmethod
     def _cost(self, theta: np.ndarray) -> float:
         """Return the cost at location theta."""
 
