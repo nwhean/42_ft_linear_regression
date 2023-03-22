@@ -2,7 +2,9 @@
 
 import csv
 
-from trainer import predict
+import numpy as np
+
+from trainer import LinearRegression
 
 
 if __name__ == "__main__":
@@ -20,7 +22,9 @@ if __name__ == "__main__":
         theta = [float(row["theta" + str(i)]) for i in range(len(row))]
         f.close()
 
+    theta = np.array(theta)
+    model = LinearRegression(theta)
     # prompt user
     mileage = float(input("Please enter mileage: "))
-    price = predict(theta, mileage)
+    price = model.predict(mileage)
     print(f"The predicted price is {price:.0f}.")
