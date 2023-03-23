@@ -29,7 +29,8 @@ class LinearRegression(Regression):
 
     def score(self) -> float:
         """Return the coefficient of determination of the prediction."""
-        return 1 - self._residual_ss(self.theta) / residual_total(y)
+        return 1 - (self._residual_ss(self.theta)
+                    / LinearRegression.residual_total(self.var_y))
 
     def _residual_ss(self, theta: np.ndarray) -> float:
         """Return the residual sum of squares."""
@@ -53,6 +54,17 @@ class LinearRegression(Regression):
             grad.append(np.sum(residual * self.var_x[:, j]))
         grad = np.array(grad)
         return grad * -2 / count
+
+    @staticmethod
+    def mean(nums: np.ndarray) -> float:
+        """Return the mean of a list of float."""
+        return np.sum(nums) / nums.size
+
+    @staticmethod
+    def residual_total(var_y: np.ndarray) -> float:
+        """Return the total sum of squares."""
+        y_mean = LinearRegression.mean(var_y)
+        return np.sum((var_y - y_mean)**2)
 
 
 def read_file(filename: str, x_name: str, y_name: str) -> tuple[list[float]]:
@@ -97,15 +109,6 @@ def denormalise(theta: list[float], shift_x: np.ndarray, scale_x: np.ndarray,
               ])
     retval = np.append(retval, theta[1:] * scale_y / scale_x)
     return np.array(retval)
-
-def mean(nums: np.ndarray) -> float:
-    """Return the mean of a list of float."""
-    return np.sum(nums) / nums.size
-
-def residual_total(var_y: np.ndarray) -> float:
-    """Return the total sum of squares."""
-    y_mean = mean(var_y)
-    return np.sum((var_y - y_mean)**2)
 
 
 if __name__ == "__main__":
