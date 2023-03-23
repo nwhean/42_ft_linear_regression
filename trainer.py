@@ -1,7 +1,6 @@
 """This module implements the required functions for ft_linear_regression."""
 
 import csv
-from typing import Optional
 
 import numpy as np
 
@@ -11,7 +10,7 @@ from regression import Regression
 class LinearRegression(Regression):
     """Ordinary least squares Linear Regression."""
     def predict(self, var_x: np.ndarray | np.matrix,
-                theta: Optional[np.ndarray] = None) -> float:
+                theta: np.ndarray | None = None) -> float:
         """
         Return the predicted value, y based on linear regression model.
         Where
@@ -23,7 +22,7 @@ class LinearRegression(Regression):
         if len(var_x.shape) == 1:
             return theta[0] + np.sum(theta[1:] * var_x)
         elif len(var_x.shape) == 2:
-            return theta[0] + np.sum((var_x.T * theta[1:]).T, axis=1)
+            return theta[0] + np.sum(var_x * theta[1:], axis=1)
         else:
             return None
 

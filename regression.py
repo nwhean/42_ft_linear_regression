@@ -22,16 +22,27 @@ class Regression(ABC):
         self._theta = param
 
     @abstractmethod
-    def predict(self, var_x: np.ndarray | np.matrix) -> float:
+    def predict(self, var_x: np.ndarray,
+                theta: np.ndarray | None = None) -> float | np.ndarray:
         """Return the prediction, given list of feature"""
 
-    def fit(self, var_x: np.matrix, var_y: np.ndarray,
+    def fit(self, var_x: np.ndarray, var_y: np.ndarray,
             precision=10**-12) -> np.ndarray:
         """Train the regression model.
         where var_x     = independent variables
               var_y     = dependent variabels
               precision = precision at which to stop gradient descent
         """
+        # ensure var_x is a 2 dimensional array
+        if len(var_x.shape) == 1:
+            var_x = var_x[:, np.newaxis]
+
+        # remove any missing data
+        no_nan_x = ~np.isnan(var_x).any(axis=1)
+        no_nan_y = ~np.isnan(var_y)
+        var_x = var_x[no_nan_x & no_nan_y]
+        var_y = var_y[no_nan_x & no_nan_y]
+
         # store data
         self.var_x = var_x
         self.var_y = var_y
