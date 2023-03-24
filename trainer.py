@@ -21,10 +21,10 @@ class LinearRegression(Regression):
 
         if len(var_x.shape) == 1:
             return theta[0] + np.sum(theta[1:] * var_x)
-        elif len(var_x.shape) == 2:
-            return theta[0] + np.sum(var_x * theta[1:], axis=1)
         else:
-            return None
+            ones = np.ones((var_x.shape[0], 1))
+            var_x = np.hstack((ones, var_x))
+            return np.sum(var_x * theta, axis=1)
 
     def score(self) -> float:
         """Return the coefficient of determination of the prediction."""
